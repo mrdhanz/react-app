@@ -4,7 +4,7 @@ pipeline {
     environment {
         KUBE_CONFIG = credentials('kubeconfig') // Jenkins credentials ID for Kubeconfig
         TERRAFORM_WORKSPACE = 'default'
-        REACT_APP_NAME = 'my-react-app'
+        REACT_APP_NAME = 'react-app'
         NAMESPACE = 'default'
     }
 
