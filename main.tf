@@ -10,7 +10,7 @@ resource "kubernetes_namespace" "react_app" {
 
 resource "kubernetes_deployment" "react_app" {
   metadata {
-    name = "react-app"
+    name      = "react-app"
     namespace = kubernetes_namespace.react_app.metadata[0].name
   }
 

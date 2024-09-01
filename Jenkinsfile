@@ -1,5 +1,9 @@
 pipeline {
     agent any
+    // add terraform destroy parameter
+    parameters {
+        booleanParam(defaultValue: false, description: 'Destroy the infrastructure', name: 'DESTROY')
+    }
 
     environment {
         KUBE_CONFIG = credentials('kubeconfig') // Jenkins credentials ID for Kubeconfig
@@ -32,11 +36,13 @@ pipeline {
             }
         }
 
-           stage('Apply Terraform') {
+        stage('Apply Terraform') {
+            when {
+                expression { return !params.DESTROY }
+            }
             steps {
                 withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                     sh '''
-                    export KUBECONFIG=$KUBECONFIG
                     terraform init
                     terraform workspace select $TERRAFORM_WORKSPACE
                     terraform apply -auto-approve
@@ -46,12 +52,29 @@ pipeline {
         }
 
         stage('Deploy to Kubernetes') {
+            when {
+                expression { return !params.DESTROY }
+            }
             steps {
                 withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                     sh '''
-                    export KUBECONFIG=$KUBECONFIG
                     kubectl apply -f kubernetes/deployment.yaml
                     kubectl apply -f kubernetes/service.yaml
+                    '''
+                }
+            }
+        }
+
+        stage('Destroy Terraform') {
+            when {
+                expression { return params.DESTROY }
+            }
+            steps {
+                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                    sh '''
+                    terraform init
+                    terraform workspace select $TERRAFORM_WORKSPACE
+                    terraform destroy -auto-approve
                     '''
                 }
             }
