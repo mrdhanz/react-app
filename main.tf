@@ -31,7 +31,7 @@ resource "kubernetes_deployment" "react_app" {
   }
 
   spec {
-    replicas = 3
+    replicas = 1
     selector {
       match_labels = {
         app = "react-app"
@@ -85,7 +85,7 @@ resource "kubernetes_service" "react_app" {
 
     port {
       port        = 80
-      target_port = 8063
+      target_port = 80
     }
 
     type = "LoadBalancer"

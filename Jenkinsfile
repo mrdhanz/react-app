@@ -42,7 +42,7 @@ pipeline {
             }
         }
 
-        stage('Apply Terraform') {
+        stage('Apply Terraform Plan') {
             when {
                 expression { return !params.DESTROY }
             }
@@ -55,6 +55,12 @@ pipeline {
                     # Copy build result to the PVC volume in the pod
                     POD_NAME=$(kubectl get pods -n $REACT_APP_NAME -l app=$REACT_APP_NAME -o jsonpath="{.items[0].metadata.name}")
                     kubectl cp build $POD_NAME:/usr/share/nginx/html -n $REACT_APP_NAME
+                    kubectl exec $POD_NAME -n $REACT_APP_NAME -- mv /usr/share/nginx/html/build/* /usr/share/nginx/html
+                    # Expose the service
+                    kubectl expose pod $POD_NAME --type=NodePort --port=80 -n $REACT_APP_NAME
+                    # Get the NodePort
+                    NODE_PORT=$(kubectl get svc $REACT_APP_NAME -n $REACT_APP_NAME -o jsonpath="{.spec.ports[0].nodePort}")
+                    echo "NodePort: $NODE_PORT"
                     '''
                 }
             }
