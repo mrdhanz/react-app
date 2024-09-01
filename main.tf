@@ -8,6 +8,22 @@ resource "kubernetes_namespace" "react_app" {
   }
 }
 
+resource "kubernetes_persistent_volume_claim" "react_app_pvc" {
+  metadata {
+    name      = "react-app-pvc"
+    namespace = kubernetes_namespace.react_app.metadata[0].name
+  }
+
+  spec {
+    access_modes = ["ReadWriteOnce"]
+    resources {
+      requests = {
+        storage = "1Gi"
+      }
+    }
+  }
+}
+
 resource "kubernetes_deployment" "react_app" {
   metadata {
     name      = "react-app"
@@ -47,7 +63,9 @@ resource "kubernetes_deployment" "react_app" {
         volume {
           name = "react-app-volume"
 
-          empty_dir {}
+          persistent_volume_claim {
+            claim_name = kubernetes_persistent_volume_claim.react_app_pvc.metadata[0].name
+          }
         }
       }
     }
