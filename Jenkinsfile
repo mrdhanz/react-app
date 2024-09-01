@@ -25,12 +25,18 @@ pipeline {
         }
 
         stage('Install Dependencies') {
+            when {
+                expression { return !params.DESTROY }
+            }
             steps {
                 sh 'npm install'
             }
         }
 
         stage('Build React App') {
+            when {
+                expression { return !params.DESTROY }
+            }
             steps {
                 sh 'npm run build'
             }
