@@ -2,52 +2,52 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_REPO = 'mrdhanz/react-app'
-        KUBE_CONFIG = credentials('kubeconfig') // Jenkins credentials for Kubernetes config
+        KUBE_CONFIG = credentials('kubeconfig') // Jenkins credentials ID for Kubeconfig
+        TERRAFORM_WORKSPACE = 'default'
+        REACT_APP_NAME = 'my-react-app'
+        NAMESPACE = 'default'
     }
 
     stages {
-        stage('Checkout Code') {
+        stage('Checkout') {
             steps {
-                git credentialsId: 'Git', url: 'https://github.com/mrdhanz/react-app.git'
+                git branch: 'master', url: 'https://github.com/mrdhanz/react-app.git', credentialsId: 'Git'
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Install Dependencies') {
             steps {
-                script {
-                    withDockerRegistry(credentialsId: 'dockerhub-credentials', url: 'https://index.docker.io/v1/') {
-                        sh "docker build -t ${DOCKER_REPO}:latest ."
-                    }
+                sh 'npm install'
+            }
+        }
+
+        stage('Build React App') {
+            steps {
+                sh 'npm run build'
+            }
+        }
+
+        stage('Apply Terraform') {
+            steps {
+                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                    sh '''
+                    terraform init
+                    terraform workspace select $TERRAFORM_WORKSPACE
+                    terraform apply -auto-approve
+                    '''
                 }
             }
         }
 
-        stage('Push Docker Image') {
+        stage('Deploy to Kubernetes') {
             steps {
-                script {
-                    withDockerRegistry(credentialsId: 'dockerhub-credentials', url: 'https://index.docker.io/v1/') {
-                        sh "docker push ${DOCKER_REPO}:latest"
-                    }
+                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                    sh '''
+                    kubectl apply -f kubernetes/deployment.yaml
+                    kubectl apply -f kubernetes/service.yaml
+                    '''
                 }
             }
-        }
-
-        stage('Deploy with Terraform') {
-            steps {
-                script {
-                    sh """
-                        terraform init
-                        terraform apply -auto-approve
-                    """
-                }
-            }
-        }
-    }
-
-    post {
-        always {
-            cleanWs()
         }
     }
 }

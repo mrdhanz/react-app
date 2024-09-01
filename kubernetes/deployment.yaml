@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: react-app
+  namespace: default
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: react-app
+  template:
+    metadata:
+      labels:
+        app: react-app
+    spec:
+      containers:
+      - name: react-app
+        image: nginx
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: react-app-volume
+          mountPath: /usr/share/nginx/html
+      volumes:
+      - name: react-app-volume
+        emptyDir: {}

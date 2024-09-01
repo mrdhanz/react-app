@@ -1,16 +1,21 @@
 provider "kubernetes" {
-  config_path = "~/.kube/config"  # Ensure this points to your local kubeconfig
+  config_path = "~/.kube/config"
+}
+
+resource "kubernetes_namespace" "react_app" {
+  metadata {
+    name = "react-app"
+  }
 }
 
 resource "kubernetes_deployment" "react_app" {
   metadata {
     name = "react-app"
-    namespace = "default"
+    namespace = kubernetes_namespace.react_app.metadata[0].name
   }
 
   spec {
-    replicas = 1
-
+    replicas = 3
     selector {
       match_labels = {
         app = "react-app"
@@ -26,21 +31,33 @@ resource "kubernetes_deployment" "react_app" {
 
       spec {
         container {
-          image = "mrdhanz/react-app:latest"
+          image = "nginx"
           name  = "react-app"
 
-          ports {
+          port {
             container_port = 80
           }
+
+          volume_mount {
+            name       = "react-app-volume"
+            mount_path = "/usr/share/nginx/html"
+          }
+        }
+
+        volume {
+          name = "react-app-volume"
+
+          empty_dir {}
         }
       }
     }
   }
 }
 
-resource "kubernetes_service" "react_app_service" {
+resource "kubernetes_service" "react_app" {
   metadata {
-    name = "react-app-service"
+    name      = "react-app"
+    namespace = kubernetes_namespace.react_app.metadata[0].name
   }
 
   spec {
@@ -50,7 +67,7 @@ resource "kubernetes_service" "react_app_service" {
 
     port {
       port        = 80
-      target_port = 8091
+      target_port = 8083
     }
 
     type = "LoadBalancer"
