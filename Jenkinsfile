@@ -36,6 +36,7 @@ pipeline {
             steps {
                 withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                     sh '''
+                    export KUBECONFIG=$KUBECONFIG
                     terraform init
                     terraform workspace select $TERRAFORM_WORKSPACE
                     terraform apply -auto-approve
@@ -48,6 +49,7 @@ pipeline {
             steps {
                 withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                     sh '''
+                    export KUBECONFIG=$KUBECONFIG
                     kubectl apply -f kubernetes/deployment.yaml
                     kubectl apply -f kubernetes/service.yaml
                     '''
