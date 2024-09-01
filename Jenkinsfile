@@ -54,7 +54,7 @@ pipeline {
                     terraform apply -auto-approve
                     # Copy build result to the PVC volume in the pod
                     POD_NAME=$(kubectl get pods -n $REACT_APP_NAME -l app=$REACT_APP_NAME -o jsonpath="{.items[0].metadata.name}")
-                    kubectl cp build/* $POD_NAME:/usr/share/nginx/html -n $REACT_APP_NAME
+                    kubectl cp build $POD_NAME:/usr/share/nginx/html -n $REACT_APP_NAME
                     '''
                 }
             }
