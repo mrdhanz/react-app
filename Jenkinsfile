@@ -10,6 +10,7 @@ pipeline {
 
     tools {
         nodejs 'nodejs-22'
+        terraform 'terraform'
     }
 
     stages {
