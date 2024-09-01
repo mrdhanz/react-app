@@ -66,6 +66,7 @@ pipeline {
                     sh '''
                     kubectl apply -f kubernetes/deployment.yaml
                     kubectl apply -f kubernetes/service.yaml
+                    kubectl cp build/ $REACT_APP_NAME:/usr/share/nginx/html
                     '''
                 }
             }
