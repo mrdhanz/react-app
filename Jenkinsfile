@@ -66,7 +66,10 @@ pipeline {
                     sh '''
                     kubectl apply -f kubernetes/deployment.yaml
                     kubectl apply -f kubernetes/service.yaml
-                    kubectl cp build/ $REACT_APP_NAME:/usr/share/nginx/html
+                    # get the pod name
+                    POD_NAME=$(kubectl get pods -n $NAMESPACE -l app=$REACT_APP_NAME -o jsonpath="{.items[0].metadata.name}")
+                    # copy the build folder to the pod
+                    kubectl cp build/ $POD_NAME:/usr/share/nginx/html
                     '''
                 }
             }
