@@ -9,7 +9,7 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                git 'https://github.com/your-repo/react-app.git'
+                git 'https://github.com/mrdhanz/react-app.git'
             }
         }
 
