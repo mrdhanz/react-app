@@ -71,6 +71,20 @@ pipeline {
             }
         }
 
+        stage('Destroy Kubernetes Resources') {
+            when {
+                expression { return params.DESTROY }
+            }
+            steps {
+                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                    sh '''
+                    kubectl delete -f kubernetes/service.yaml
+                    kubectl delete -f kubernetes/deployment.yaml
+                    '''
+                }
+            }
+        }
+
         stage('Destroy Terraform') {
             when {
                 expression { return params.DESTROY }
