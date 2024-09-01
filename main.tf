@@ -1,9 +1,7 @@
 provider "kubernetes" {
-  config_path = var.kubeconfig
+  config_path = "~/.kube/config"
 }
-variable "kubeconfig" {
-  type = string
-}
+
 resource "kubernetes_namespace" "react_app" {
   metadata {
     name = "react-app"

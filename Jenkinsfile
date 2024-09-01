@@ -2,6 +2,7 @@ pipeline {
     agent any
 
     environment {
+        KUBE_CONFIG = credentials('kubeconfig') // Jenkins credentials ID for Kubeconfig
         TERRAFORM_WORKSPACE = 'default'
         REACT_APP_NAME = 'my-react-app'
         NAMESPACE = 'default'
@@ -31,13 +32,13 @@ pipeline {
             }
         }
 
-         stage('Apply Terraform') {
+           stage('Apply Terraform') {
             steps {
                 withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                     sh '''
                     terraform init
                     terraform workspace select $TERRAFORM_WORKSPACE
-                    terraform apply -auto-approve -var="kubeconfig=$KUBECONFIG"
+                    terraform apply -auto-approve
                     '''
                 }
             }
@@ -47,8 +48,8 @@ pipeline {
             steps {
                 withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                     sh '''
-                    kubectl --kubeconfig=$KUBECONFIG apply -f kubernetes/deployment.yaml
-                    kubectl --kubeconfig=$KUBECONFIG apply -f kubernetes/service.yaml
+                    kubectl apply -f kubernetes/deployment.yaml
+                    kubectl apply -f kubernetes/service.yaml
                     '''
                 }
             }
