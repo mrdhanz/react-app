@@ -31,16 +31,6 @@ pipeline {
             }
         }
 
-        // copy the kubeconfig file to /var/jenkins_home/.kube/config
-        stage('Prepare Kubeconfig') {
-            steps {
-                sh '''
-                mkdir -p /var/jenkins_home/.kube
-                cp $KUBE_CONFIG /var/jenkins_home/.kube/config
-                '''
-            }
-        }
-
          stage('Apply Terraform') {
             steps {
                 withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
