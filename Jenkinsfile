@@ -16,7 +16,11 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.build("${DOCKER_REPO}:latest")
+                     docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
+                        docker.image('docker:latest').inside('-v /var/run/docker.sock:/var/run/docker.sock') {
+                            sh "docker build -t ${DOCKER_REPO}:latest ."
+                        }
+                    }
                 }
             }
         }
@@ -25,7 +29,9 @@ pipeline {
             steps {
                 script {
                     docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
-                        docker.image("${DOCKER_REPO}:latest").push()
+                        docker.image('docker:latest').inside('-v /var/run/docker.sock:/var/run/docker.sock') {
+                            sh "docker push ${DOCKER_REPO}:latest"
+                        }
                     }
                 }
             }
