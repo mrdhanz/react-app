@@ -67,7 +67,7 @@ resource "kubernetes_service" "react_app" {
 
     port {
       port        = 80
-      target_port = 8083
+      target_port = 80
     }
 
     type = "LoadBalancer"
