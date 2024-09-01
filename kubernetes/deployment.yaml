@@ -17,7 +17,7 @@ spec:
       - name: react-app
         image: nginx
         ports:
-        - containerPort: 8089
+        - containerPort: 8085
         volumeMounts:
         - name: react-app-volume
           mountPath: /usr/share/nginx/html

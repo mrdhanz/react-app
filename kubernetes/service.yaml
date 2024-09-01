@@ -8,6 +8,6 @@ spec:
     app: react-app
   ports:
     - protocol: TCP
-      port: 8089
-      targetPort: 8089
+      port: 8085
+      targetPort: 8085
   type: LoadBalancer
