@@ -8,6 +8,10 @@ pipeline {
         NAMESPACE = 'default'
     }
 
+    tools {
+        nodejs 'nodejs-22'
+    }
+
     stages {
         stage('Checkout') {
             steps {
