@@ -66,10 +66,15 @@ pipeline {
                     sh '''
                     kubectl apply -f kubernetes/deployment.yaml
                     kubectl apply -f kubernetes/service.yaml
-                    # get the pod name
-                    POD_NAME=$(kubectl get pods -n $NAMESPACE -l app=$REACT_APP_NAME -o jsonpath="{.items[0].metadata.name}")
-                    # copy the build folder to the pod
-                    kubectl cp build/ $POD_NAME:/usr/share/nginx/html
+                    # Wait for the pod to be ready
+                    POD_NAME=""
+                    while [ -z "$POD_NAME" ]; do
+                        POD_NAME=$(kubectl get pods -n $NAMESPACE -l app=$REACT_APP_NAME -o jsonpath="{.items[0].metadata.name}" --field-selector=status.phase=Running)
+                        sleep 2
+                    done
+                    echo "Pod is running: $POD_NAME"
+                    # Copy the build folder to the pod
+                    kubectl cp build/ $POD_NAME:/usr/share/nginx/html -n $NAMESPACE
                     '''
                 }
             }
