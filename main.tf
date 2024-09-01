@@ -35,7 +35,7 @@ resource "kubernetes_deployment" "react_app" {
           name  = "react-app"
 
           port {
-            container_port = 80
+            container_port = 8089
           }
 
           volume_mount {
@@ -66,8 +66,8 @@ resource "kubernetes_service" "react_app" {
     }
 
     port {
-      port        = 80
-      target_port = 80
+      port        = 8089
+      target_port = 8089
     }
 
     type = "LoadBalancer"
