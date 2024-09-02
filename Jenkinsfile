@@ -82,6 +82,7 @@ pipeline {
                             terraform init
                             terraform workspace select $TERRAFORM_WORKSPACE
                             terraform apply -auto-approve -var-file=${tfvarsFile}
+                            kubectl wait --for=condition=ready pod -l app=${REACT_APP_NAME} -n ${envName} --timeout=300s
                             POD_NAME=\$(kubectl get pods -n ${envName} -l app=${REACT_APP_NAME} -o jsonpath='{.items[0].metadata.name}')
                             kubectl cp build-${envName} \$POD_NAME:/usr/share/nginx/html -n ${envName}
                             kubectl exec \$POD_NAME -n ${envName} -- sh -c 'mv /usr/share/nginx/html/build/* /usr/share/nginx/html/'
@@ -116,7 +117,6 @@ pipeline {
                             terraform init
                             terraform workspace select $TERRAFORM_WORKSPACE
                             terraform destroy -auto-approve -var-file=${tfvarsFile}
-                            rm -rf build-${envName}
                             """
                         }
                     }
