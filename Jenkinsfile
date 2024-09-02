@@ -72,6 +72,8 @@ pipeline {
                         error "No .env files found in ${envDirectory}"
                     }
 
+                    sh "terraform init"
+
                     envFiles.each { envFile ->
                         def envName = envFile.name.replace('.env.', '')
                         echo "Applying Terraform for environment: ${envName}"
@@ -79,7 +81,6 @@ pipeline {
 
                         withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                             sh """
-                            terraform init
                             terraform workspace select $TERRAFORM_WORKSPACE
                             terraform apply -auto-approve -var-file=${tfvarsFile}
                             kubectl wait --for=condition=ready pod -l app=${REACT_APP_NAME} -n ${REACT_APP_NAME}-${envName} --timeout=300s
@@ -114,7 +115,6 @@ pipeline {
 
                         withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                             sh """
-                            terraform init
                             terraform workspace select $TERRAFORM_WORKSPACE
                             terraform destroy -auto-approve -var-file=${tfvarsFile}
                             """
