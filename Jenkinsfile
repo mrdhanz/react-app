@@ -77,14 +77,14 @@ pipeline {
                         def tfvarsFile = "${envDirectory}/${envName}.tfvars"
 
                         withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
-                            sh """
+                            sh '''
                             terraform init
                             terraform workspace select $TERRAFORM_WORKSPACE
-                            terraform apply -auto-approve -var-file=$tfvarsFile
-                            POD_NAME=$(kubectl get pods -n $envName -l app=$REACT_APP_NAME -o jsonpath="{.items[0].metadata.name}")
-                            kubectl cp build-$envName $POD_NAME:/usr/share/nginx/html -n $envName
-                            kubectl exec $POD_NAME -n $envName -- sh -c 'mv /usr/share/nginx/html/build/* /usr/share/nginx/html/'
-                            """
+                            '''
+                            sh "terraform apply -auto-approve -var-file=${tfvarsFile}"
+                            sh "POD_NAME=$(kubectl get pods -n ${envName} -l app=$REACT_APP_NAME -o jsonpath='{.items[0].metadata.name}')"
+                            sh "kubectl cp build-${envName} $POD_NAME:/usr/share/nginx/html -n ${envName}"
+                            sh "kubectl exec $POD_NAME -n ${envName} -- sh -c 'mv /usr/share/nginx/html/build/* /usr/share/nginx/html/'"
                         }
                     }
                 }
