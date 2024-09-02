@@ -1,2 +1,2 @@
 namespace_name = "react-app-amazon"
-environment_port = 3000
+environment_port = 3002
