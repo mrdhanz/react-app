@@ -51,6 +51,7 @@ pipeline {
                         withEnv(["ENV_FILE=${envFile.path}"]) {
                             echo "Running build for ${envName} using ${envFile.path}"
                             sh 'npm run build'
+                            sh "rm -rf build-${envName}"
                             sh "mv build build-${envName}"
                         }
                     }
@@ -115,6 +116,7 @@ pipeline {
                             terraform init
                             terraform workspace select $TERRAFORM_WORKSPACE
                             terraform destroy -auto-approve -var-file=${tfvarsFile}
+                            rm -rf build-${envName}
                             """
                         }
                     }
