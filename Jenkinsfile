@@ -85,7 +85,7 @@ pipeline {
                             kubectl wait --for=condition=ready pod -l app=${REACT_APP_NAME} -n ${REACT_APP_NAME}-${envName} --timeout=300s
                             POD_NAME=\$(kubectl get pods -n ${REACT_APP_NAME}-${envName} -l app=${REACT_APP_NAME} -o jsonpath='{.items[0].metadata.name}')
                             kubectl cp build-${envName} \$POD_NAME:/usr/share/nginx/html -n ${REACT_APP_NAME}-${envName}
-                            kubectl exec \$POD_NAME -n ${REACT_APP_NAME}-${envName} -- sh -c 'mv /usr/share/nginx/html/build/* /usr/share/nginx/html/'
+                            kubectl exec \$POD_NAME -n ${REACT_APP_NAME}-${envName} -- sh -c 'mv /usr/share/nginx/html/build-${envName}/* /usr/share/nginx/html/'
                             """
                         }
                     }
