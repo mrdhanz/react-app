@@ -1,10 +1,26 @@
+variable "namespace_name" {
+  description = "The name of the Kubernetes namespace"
+  type        = string
+}
+
+variable "environment_port" {
+  description = "The port to use for this environment"
+  type        = number
+}
+
+variable "storage_size" {
+  description = "The size of the persistent volume claim"
+  type        = string
+  default     = "1Gi"
+}
+
 provider "kubernetes" {
   config_path = "~/.kube/config"
 }
 
 resource "kubernetes_namespace" "react_app" {
   metadata {
-    name = "react-app"
+    name = var.namespace_name
   }
 }
 
@@ -18,7 +34,7 @@ resource "kubernetes_persistent_volume_claim" "react_app_pvc" {
     access_modes = ["ReadWriteOnce"]
     resources {
       requests = {
-        storage = "1Gi"
+        storage = var.storage_size
       }
     }
   }
@@ -84,7 +100,7 @@ resource "kubernetes_service" "react_app" {
     }
 
     port {
-      port        = 80
+      port        = var.environment_port
       target_port = 80
     }
 

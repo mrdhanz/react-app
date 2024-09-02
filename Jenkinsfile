@@ -1,12 +1,11 @@
 pipeline {
     agent any
-    // add terraform destroy parameter
     parameters {
         booleanParam(defaultValue: false, description: 'Destroy the infrastructure', name: 'DESTROY')
     }
 
     environment {
-        KUBE_CONFIG = credentials('kubeconfig') // Jenkins credentials ID for Kubeconfig
+        KUBE_CONFIG = credentials('kubeconfig')
         TERRAFORM_WORKSPACE = 'default'
         REACT_APP_NAME = 'react-app'
         NAMESPACE = 'default'
@@ -33,12 +32,29 @@ pipeline {
             }
         }
 
-        stage('Build React App') {
+        stage('Build React App for each environment') {
             when {
                 expression { return !params.DESTROY }
             }
             steps {
-                sh 'npm run build'
+                script {
+                    def envDirectory = 'environment'
+                    def envFiles = findFiles(glob: "${envDirectory}/.env.*")
+
+                    if (envFiles.length == 0) {
+                        error "No .env files found in ${envDirectory}"
+                    }
+
+                    envFiles.each { envFile ->
+                        def envName = envFile.name.replace('.env.', '')
+                        echo "Building for environment: ${envName}"
+                        withEnv(["ENV_FILE=${envFile.path}"]) {
+                            echo "Running build for ${envName} using ${envFile.path}"
+                            sh 'npm run build'
+                            sh "mv build build-${envName}"
+                        }
+                    }
+                }
             }
         }
 
@@ -47,16 +63,30 @@ pipeline {
                 expression { return !params.DESTROY }
             }
             steps {
-                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
-                    sh '''
-                    terraform init
-                    terraform workspace select $TERRAFORM_WORKSPACE
-                    terraform apply -auto-approve
-                    # Copy build result to the PVC volume in the pod
-                    POD_NAME=$(kubectl get pods -n $REACT_APP_NAME -l app=$REACT_APP_NAME -o jsonpath="{.items[0].metadata.name}")
-                    kubectl cp build $POD_NAME:/usr/share/nginx/html -n $REACT_APP_NAME
-                    kubectl exec $POD_NAME -n $REACT_APP_NAME -- sh -c 'mv /usr/share/nginx/html/build/* /usr/share/nginx/html/'
-                    '''
+                script {
+                    def envDirectory = 'environment'
+                    def envFiles = findFiles(glob: "${envDirectory}/.env.*")
+
+                    if (envFiles.length == 0) {
+                        error "No .env files found in ${envDirectory}"
+                    }
+
+                    envFiles.each { envFile ->
+                        def envName = envFile.name.replace('.env.', '')
+                        echo "Applying Terraform for environment: ${envName}"
+                        def tfvarsFile = "${envDirectory}/${envName}.tfvars"
+
+                        withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                            sh """
+                            terraform init
+                            terraform workspace select $TERRAFORM_WORKSPACE
+                            terraform apply -auto-approve -var-file=${tfvarsFile}
+                            POD_NAME=$(kubectl get pods -n ${envName} -l app=$REACT_APP_NAME -o jsonpath="{.items[0].metadata.name}")
+                            kubectl cp build-${envName} $POD_NAME:/usr/share/nginx/html -n ${envName}
+                            kubectl exec $POD_NAME -n ${envName} -- sh -c 'mv /usr/share/nginx/html/build/* /usr/share/nginx/html/'
+                            """
+                        }
+                    }
                 }
             }
         }
@@ -66,12 +96,27 @@ pipeline {
                 expression { return params.DESTROY }
             }
             steps {
-                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
-                    sh '''
-                    terraform init
-                    terraform workspace select $TERRAFORM_WORKSPACE
-                    terraform destroy -auto-approve
-                    '''
+                script {
+                    def envDirectory = 'environment'
+                    def envFiles = findFiles(glob: "${envDirectory}/.env.*")
+
+                    if (envFiles.length == 0) {
+                        error "No .env files found in ${envDirectory}"
+                    }
+
+                    envFiles.each { envFile ->
+                        def envName = envFile.name.replace('.env.', '')
+                        echo "Destroying Terraform for environment: ${envName}"
+                        def tfvarsFile = "${envDirectory}/${envName}.tfvars"
+
+                        withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                            sh """
+                            terraform init
+                            terraform workspace select $TERRAFORM_WORKSPACE
+                            terraform destroy -auto-approve -var-file=${tfvarsFile}
+                            """
+                        }
+                    }
                 }
             }
         }
