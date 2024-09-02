@@ -82,7 +82,7 @@ pipeline {
 
                         withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                             sh """
-                            terraform workspace select ${envName} -or-create
+                            terraform workspace select ${envName} -or-create=true
                             terraform apply -auto-approve -var-file=${tfvarsFile}
                             kubectl wait --for=condition=ready pod -l app=${REACT_APP_NAME} -n ${REACT_APP_NAME}-${envName} --timeout=300s
                             POD_NAME=\$(kubectl get pods -n ${REACT_APP_NAME}-${envName} -l app=${REACT_APP_NAME} -o jsonpath='{.items[0].metadata.name}')
