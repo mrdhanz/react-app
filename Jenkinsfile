@@ -45,12 +45,14 @@ pipeline {
                         error "No .env files found in ${envDirectory}"
                     }
 
+                    sh 'npm install -g env-cmd'
+
                     envFiles.each { envFile ->
                         def envName = envFile.name.replace('.env.', '')
                         echo "Building for environment: ${envName}"
                         withEnv(["ENV_FILE=${envFile.path}"]) {
                             echo "Running build for ${envName} using ${envFile.path}"
-                            sh 'npm run build'
+                            sh "env-cmd -f ${envFile.path} npm run build"
                             sh "rm -rf build-${envName}"
                             sh "mv build build-${envName}"
                         }
