@@ -116,7 +116,7 @@ pipeline {
 
                         withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                             sh """
-                            terraform workspace select ${envName}
+                            terraform workspace select default
                             terraform destroy -auto-approve -var-file=${tfvarsFile}
                             """
                         }
